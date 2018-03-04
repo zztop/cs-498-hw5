@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from scipy.spatial.distance import cdist
 from sklearn.cluster import KMeans
 from scipy.cluster.hierarchy import dendrogram
 from scipy.cluster import hierarchy, vq
@@ -16,17 +17,22 @@ if __name__ == "__main__":
     kmeans = KMeans(n_clusters=3)
     means1 = kmeans.fit_predict(all_data.values)
 
-    error = {}
+    error = []
     error_ec = {}
-    for k in range(1, all_data.shape[1]):
+    K=range(1, all_data.shape[1])
+    for k in K:
         kmeans = KMeans(n_clusters=k)
         means2 = kmeans.fit_predict(all_data.values)
-        errorij = 0
-        for cj in kmeans.cluster_centers_:
-            errorij += np.sum(np.sum((all_data.values - cj) ** 2, axis=1),axis=0)
-            # for i, xi in enumerate(all_data.values):
-            #     errorij += np.dot(xi - cj, (xi - cj).T)
-        error[k] = errorij
+        mean_cluster_centers = np.mean(kmeans.cluster_centers_,axis=0)
+        # error[k] = np.sum((all_data.values - mean_cluster_centers) ** 2, axis=1)
+        error.append(sum(np.min(cdist(all_data.values,kmeans.cluster_centers_, 'euclidean'),axis=1)))
+
+    plt.figure()
+    plt.plot(K,error,'bx-')
+    plt.xlabel('K')
+    plt.ylabel('Error')
+    plt.savefig('elbow.png')
+
 
     kmeans = KMeans(n_clusters=5)
     mean3 = kmeans.fit_predict(all_data)
